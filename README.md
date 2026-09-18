@@ -35,6 +35,12 @@ npm run dev
 
 เปิด `http://localhost:3000` แล้วอนุญาตให้เว็บเข้าถึงตำแหน่งปัจจุบัน ในโหมด dev ปกติ frontend/backend อยู่ process เดียวกัน ไม่ต้องตั้ง `NUXT_PUBLIC_API_BASE_URL` หรือ `CORS_ORIGIN`
 
+รัน lint ก่อน commit:
+
+```bash
+npm run lint
+```
+
 ## Environment Variables
 
 | ตัวแปร | ฝั่ง | ใช้ทำอะไร |
@@ -54,11 +60,14 @@ npm run dev
 - [`app/components/RouteSummary.vue`](app/components/RouteSummary.vue) — แสดงระยะทาง/เวลา
 - [`app/components/MapView.vue`](app/components/MapView.vue) — แสดงแผนที่ วาดเส้นทางจาก polyline พร้อม marker ต้นทาง/ปลายทาง
 - [`app/utils/polyline.ts`](app/utils/polyline.ts) — decode encoded polyline ที่ได้จาก Directions API
-- [`server/api/directions.post.ts`](server/api/directions.post.ts) — รับพิกัดต้นทาง เรียก Google Directions API ด้วย `departure_time=now` แล้วส่งผลลัพธ์กลับเป็น JSON
+- [`server/api/directions.post.ts`](server/api/directions.post.ts) — validate input, rate limit ตาม IP, เรียก Google Directions API ด้วย `departure_time=now` แล้วส่งผลลัพธ์กลับเป็น JSON
 - [`server/api/directions.options.ts`](server/api/directions.options.ts) — ตอบ CORS preflight เมื่อ frontend/backend อยู่คนละโดเมน
-- [`server/utils/googleMaps.ts`](server/utils/googleMaps.ts) — เรียก Google Directions API
+- [`server/utils/googleMaps.ts`](server/utils/googleMaps.ts) — เรียก Google Directions API (มี timeout 8 วินาที)
+- [`server/utils/directionsCache.ts`](server/utils/directionsCache.ts) — cache ผลลัพธ์เส้นทางในหน่วยความจำ 90 วินาที ต่อคู่พิกัดต้นทาง/ปลายทาง เพื่อลดการเรียก Google API ซ้ำ
+- [`server/utils/rateLimit.ts`](server/utils/rateLimit.ts) — จำกัดจำนวน request ต่อ IP (ค่า default 20 ครั้ง/นาที) กัน quota ถูกใช้จนหมด
 - [`server/utils/cors.ts`](server/utils/cors.ts) — ใส่ CORS header ตาม `CORS_ORIGIN`
 - [`shared/types/directions.ts`](shared/types/directions.ts) — type ร่วมระหว่าง frontend/backend
+- [`shared/utils/validation.ts`](shared/utils/validation.ts) — ตรวจว่าเป็นพิกัด lat/lng ที่ถูกต้อง (ตัวเลขและอยู่ในช่วงที่เป็นไปได้)
 
 ## Production
 
