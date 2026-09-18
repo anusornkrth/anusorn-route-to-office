@@ -34,7 +34,7 @@ async function render() {
   markers.forEach((marker) => marker.setMap(null))
   markers.length = 0
   markers.push(
-    new g.maps.Marker({ position: props.origin, map, label: 'A', title: 'ตำแหน่งของคุณ' }),
+    new g.maps.Marker({ position: props.origin, map, label: 'A', title: 'จุดเริ่มต้น' }),
     new g.maps.Marker({ position: props.destination, map, label: 'B', title: props.destination.name })
   )
 
@@ -46,14 +46,21 @@ watch(() => props.polyline, render)
 </script>
 
 <template>
-  <div ref="mapContainer" class="map" />
+  <div class="card map-card">
+    <div ref="mapContainer" class="map" />
+  </div>
 </template>
 
 <style scoped>
+.map-card {
+  padding: 8px;
+  overflow: hidden;
+}
+
 .map {
   width: 100%;
   height: 420px;
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
 }
 </style>

@@ -6,7 +6,7 @@ export function useDirections() {
   const status = ref<DirectionsStatus>('idle')
   const errorMessage = ref('')
 
-  async function fetchDirections(origin: LatLng) {
+  async function fetchDirections(origin: LatLng, destination?: LatLng) {
     status.value = 'loading'
     errorMessage.value = ''
 
@@ -14,7 +14,7 @@ export function useDirections() {
       result.value = await $fetch<DirectionsResult>('/api/directions', {
         baseURL: config.public.apiBaseUrl,
         method: 'POST',
-        body: { origin }
+        body: destination ? { origin, destination } : { origin }
       })
       status.value = 'success'
     } catch (err) {

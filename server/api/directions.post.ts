@@ -11,10 +11,19 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const hasCustomDestination =
+    !!body.destination && typeof body.destination.lat === 'number' && typeof body.destination.lng === 'number'
+
+  if (body.destination && !hasCustomDestination) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'destination { lat, lng } is invalid',
+      data: { error: true, message: 'destination { lat, lng } is invalid' }
+    })
+  }
+
   const config = useRuntimeConfig()
   const apiKey = config.googleMapsApiKey
-  const companyLat = Number(config.companyLat)
-  const companyLng = Number(config.companyLng)
 
   if (!apiKey) {
     throw createError({
@@ -24,15 +33,28 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if (!Number.isFinite(companyLat) || !Number.isFinite(companyLng)) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'COMPANY_LAT/COMPANY_LNG is not configured',
-      data: { error: true, message: 'COMPANY_LAT/COMPANY_LNG is not configured on the server' }
-    })
+  let destination: LatLng
+  let destinationName: string
+
+  if (hasCustomDestination) {
+    destination = body.destination as LatLng
+    destinationName = 'ปลายทางที่กำหนด'
+  } else {
+    const companyLat = Number(config.companyLat)
+    const companyLng = Number(config.companyLng)
+
+    if (!Number.isFinite(companyLat) || !Number.isFinite(companyLng)) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'COMPANY_LAT/COMPANY_LNG is not configured',
+        data: { error: true, message: 'COMPANY_LAT/COMPANY_LNG is not configured on the server' }
+      })
+    }
+
+    destination = { lat: companyLat, lng: companyLng }
+    destinationName = 'สำนักงานใหญ่'
   }
 
-  const destination = { lat: companyLat, lng: companyLng }
   const data = await fetchGoogleDirections(body.origin, destination, apiKey)
 
   const route = data.routes[0]
@@ -56,7 +78,7 @@ export default defineEventHandler(async (event) => {
       distance: step.distance,
       duration: step.duration
     })),
-    destination: { ...destination, name: 'สำนักงานใหญ่' },
+    destination: { ...destination, name: destinationName },
     calculatedAt: new Date().toISOString()
   }
 

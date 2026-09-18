@@ -5,6 +5,7 @@ export interface LatLng {
 
 export interface DirectionsRequest {
   origin: LatLng
+  destination?: LatLng
 }
 
 export interface TextValue {

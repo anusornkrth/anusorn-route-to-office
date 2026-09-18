@@ -35,7 +35,6 @@
 |--------|-----|
 | ชื่อ Key | `directions-server-key` |
 | Application restriction | IP addresses |
-| IP ranges ที่อนุญาต | `74.220.49.0/24`, `74.220.57.0/24` (Render outbound IP ของ region ที่ใช้อยู่) |
 | API restriction | เฉพาะ **Directions API** และ **Geocoding API** |
 | ใช้เป็น env var | `GOOGLE_MAPS_API_KEY` (ฝั่ง Backend เท่านั้น — ห้าม expose ไป client) |
 

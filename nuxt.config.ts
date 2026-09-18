@@ -9,6 +9,7 @@ export default defineNuxtConfig({
       }
     }
   },
+  css: ['~/assets/css/main.css'],
   runtimeConfig: {
     // Server-only: used by server/api/directions to call the Directions API. Never exposed to the client.
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || '',
@@ -20,7 +21,10 @@ export default defineNuxtConfig({
       // Exposed to the browser to render the Maps JavaScript API. Restrict it by HTTP referrer in Google Cloud Console.
       googleMapsJsKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_JS_KEY || '',
       // Base URL of the backend API. Leave empty for same-origin full-stack deployments/local dev.
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || ''
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '',
+      // Not sensitive (a fixed office address) — used to pre-fill the destination field in custom mode.
+      companyLat: process.env.COMPANY_LAT || '13.805384',
+      companyLng: process.env.COMPANY_LNG || '100.537707'
     }
   }
 })
