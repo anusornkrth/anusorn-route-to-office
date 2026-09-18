@@ -21,7 +21,7 @@ export function useGoogleMapsLoader() {
       ;(window as unknown as Record<string, () => void>)[callbackName] = () => resolve(window.google)
 
       const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(config.public.googleMapsBrowserKey)}&callback=${callbackName}`
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(config.public.googleMapsJsKey)}&callback=${callbackName}`
       script.async = true
       script.onerror = () => reject(new Error('Failed to load Google Maps JavaScript API'))
       document.head.appendChild(script)

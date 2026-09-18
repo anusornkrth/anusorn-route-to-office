@@ -1,41 +1,53 @@
-import type { GoogleDirectionsResponse } from '../utils/googleDirections'
-
-interface DirectionsRequestBody {
-  origin?: { lat: number; lng: number }
-}
-
 export default defineEventHandler(async (event) => {
-  const body = await readBody<DirectionsRequestBody>(event)
+  if (applyCors(event)) return
+
+  const body = await readBody<DirectionsRequest>(event)
 
   if (!body?.origin || typeof body.origin.lat !== 'number' || typeof body.origin.lng !== 'number') {
-    throw createError({ statusCode: 400, statusMessage: 'origin { lat, lng } is required' })
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'origin { lat, lng } is required',
+      data: { error: true, message: 'origin { lat, lng } is required' }
+    })
   }
 
   const config = useRuntimeConfig()
   const apiKey = config.googleMapsApiKey
+  const companyLat = Number(config.companyLat)
+  const companyLng = Number(config.companyLng)
+
   if (!apiKey) {
-    throw createError({ statusCode: 500, statusMessage: 'GOOGLE_MAPS_API_KEY is not configured on the server' })
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'GOOGLE_MAPS_API_KEY is not configured',
+      data: { error: true, message: 'GOOGLE_MAPS_API_KEY is not configured on the server' }
+    })
   }
 
-  const url = new URL('https://maps.googleapis.com/maps/api/directions/json')
-  url.searchParams.set('origin', `${body.origin.lat},${body.origin.lng}`)
-  url.searchParams.set('destination', `${COMPANY_LOCATION.lat},${COMPANY_LOCATION.lng}`)
-  url.searchParams.set('departure_time', 'now')
-  url.searchParams.set('key', apiKey)
+  if (!Number.isFinite(companyLat) || !Number.isFinite(companyLng)) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'COMPANY_LAT/COMPANY_LNG is not configured',
+      data: { error: true, message: 'COMPANY_LAT/COMPANY_LNG is not configured on the server' }
+    })
+  }
 
-  const data = await $fetch<GoogleDirectionsResponse>(url.toString())
+  const destination = { lat: companyLat, lng: companyLng }
+  const data = await fetchGoogleDirections(body.origin, destination, apiKey)
 
   const route = data.routes[0]
   const leg = route?.legs[0]
 
   if (data.status !== 'OK' || !route || !leg) {
+    console.error(`Directions API error: ${data.status}${data.error_message ? ` - ${data.error_message}` : ''}`)
     throw createError({
       statusCode: 502,
-      statusMessage: `Directions API error: ${data.status}${data.error_message ? ` - ${data.error_message}` : ''}`
+      statusMessage: `Directions API error: ${data.status}`,
+      data: { error: true, message: 'ไม่สามารถคำนวณเส้นทางได้' }
     })
   }
 
-  return {
+  const result: DirectionsResult = {
     distance: leg.distance,
     duration: leg.duration_in_traffic ?? leg.duration,
     polyline: route.overview_polyline.points,
@@ -44,7 +56,9 @@ export default defineEventHandler(async (event) => {
       distance: step.distance,
       duration: step.duration
     })),
-    destination: COMPANY_LOCATION,
+    destination: { ...destination, name: 'สำนักงานใหญ่' },
     calculatedAt: new Date().toISOString()
   }
+
+  return result
 })

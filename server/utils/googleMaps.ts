@@ -21,8 +21,18 @@ export interface GoogleDirectionsRoute {
   legs: GoogleDirectionsLeg[]
 }
 
-export interface GoogleDirectionsResponse {
+export interface GoogleDirectionsApiResponse {
   status: string
   error_message?: string
   routes: GoogleDirectionsRoute[]
+}
+
+export function fetchGoogleDirections(origin: LatLng, destination: LatLng, apiKey: string) {
+  const url = new URL('https://maps.googleapis.com/maps/api/directions/json')
+  url.searchParams.set('origin', `${origin.lat},${origin.lng}`)
+  url.searchParams.set('destination', `${destination.lat},${destination.lng}`)
+  url.searchParams.set('departure_time', 'now')
+  url.searchParams.set('key', apiKey)
+
+  return $fetch<GoogleDirectionsApiResponse>(url.toString())
 }
