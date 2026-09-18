@@ -5,7 +5,7 @@ export function useGeolocation() {
   const status = ref<GeolocationStatus>('idle')
   const errorMessage = ref('')
 
-  function locate() {
+  function locate(isRetry = false) {
     status.value = 'locating'
     errorMessage.value = ''
 
@@ -20,10 +20,18 @@ export function useGeolocation() {
         status.value = 'success'
       },
       (error) => {
+        // macOS CoreLocation can report a transient "location unknown" failure even with
+        // Location Services enabled. One silent retry clears most of these without
+        // bothering the user with an error screen.
+        if (error.code === error.POSITION_UNAVAILABLE && !isRetry) {
+          setTimeout(() => locate(true), 1000)
+          return
+        }
+
         status.value = error.code === error.PERMISSION_DENIED ? 'denied' : 'error'
         errorMessage.value = error.message
       },
-      { enableHighAccuracy: false, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     )
   }
 
