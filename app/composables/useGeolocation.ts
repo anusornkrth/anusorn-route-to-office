@@ -23,7 +23,7 @@ export function useGeolocation() {
         status.value = error.code === error.PERMISSION_DENIED ? 'denied' : 'error'
         errorMessage.value = error.message
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 10000 }
     )
   }
 
