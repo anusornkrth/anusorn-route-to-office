@@ -67,13 +67,13 @@ watch(location, (loc) => {
         placeholder="lat,lng เช่น 13.7563,100.5018"
         @blur="parse"
         @keyup.enter="parse"
-      />
+      >
       <button
         type="button"
         class="btn btn-icon"
         :disabled="geoStatus === 'locating'"
         title="ใช้ตำแหน่งปัจจุบัน"
-        @click="locate"
+        @click="locate()"
       >
         <span v-if="geoStatus === 'locating'" class="spinner" />
         <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none">

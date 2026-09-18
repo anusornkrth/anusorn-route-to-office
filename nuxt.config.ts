@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+
   typescript: {
     tsConfig: {
       compilerOptions: {
@@ -9,7 +10,9 @@ export default defineNuxtConfig({
       }
     }
   },
+
   css: ['~/assets/css/main.css'],
+
   runtimeConfig: {
     // Server-only: used by server/api/directions to call the Directions API. Never exposed to the client.
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || '',
@@ -26,5 +29,7 @@ export default defineNuxtConfig({
       companyLat: process.env.COMPANY_LAT || '13.805384',
       companyLng: process.env.COMPANY_LNG || '100.537707'
     }
-  }
+  },
+
+  modules: ['@nuxt/eslint']
 })
