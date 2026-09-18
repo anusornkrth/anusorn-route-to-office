@@ -34,5 +34,5 @@ export function fetchGoogleDirections(origin: LatLng, destination: LatLng, apiKe
   url.searchParams.set('departure_time', 'now')
   url.searchParams.set('key', apiKey)
 
-  return $fetch<GoogleDirectionsApiResponse>(url.toString())
+  return $fetch<GoogleDirectionsApiResponse>(url.toString(), { timeout: 8000 })
 }

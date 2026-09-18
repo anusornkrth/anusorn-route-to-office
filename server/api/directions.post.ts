@@ -1,20 +1,26 @@
 export default defineEventHandler(async (event) => {
   if (applyCors(event)) return
 
-  const body = await readBody<DirectionsRequest>(event)
-
-  if (!body?.origin || typeof body.origin.lat !== 'number' || typeof body.origin.lng !== 'number') {
+  const clientIp = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
+  if (!checkRateLimit(clientIp)) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'origin { lat, lng } is required',
-      data: { error: true, message: 'origin { lat, lng } is required' }
+      statusCode: 429,
+      statusMessage: 'Too many requests',
+      data: { error: true, message: 'เรียกใช้งานถี่เกินไป กรุณาลองใหม่อีกครั้งในอีกสักครู่' }
     })
   }
 
-  const hasCustomDestination =
-    !!body.destination && typeof body.destination.lat === 'number' && typeof body.destination.lng === 'number'
+  const body = await readBody<DirectionsRequest>(event)
 
-  if (body.destination && !hasCustomDestination) {
+  if (!isValidLatLng(body?.origin)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'origin { lat, lng } is required and must be within a valid range',
+      data: { error: true, message: 'origin { lat, lng } is required and must be within a valid range' }
+    })
+  }
+
+  if (body.destination !== undefined && !isValidLatLng(body.destination)) {
     throw createError({
       statusCode: 400,
       statusMessage: 'destination { lat, lng } is invalid',
@@ -36,8 +42,8 @@ export default defineEventHandler(async (event) => {
   let destination: LatLng
   let destinationName: string
 
-  if (hasCustomDestination) {
-    destination = body.destination as LatLng
+  if (body.destination) {
+    destination = body.destination
     destinationName = 'ปลายทางที่กำหนด'
   } else {
     const companyLat = Number(config.companyLat)
@@ -55,7 +61,17 @@ export default defineEventHandler(async (event) => {
     destinationName = 'สำนักงานใหญ่'
   }
 
-  const data = await fetchGoogleDirections(body.origin, destination, apiKey)
+  let data
+  try {
+    data = await fetchGoogleDirectionsCached(body.origin, destination, apiKey)
+  } catch (err) {
+    console.error('Directions API request failed:', err)
+    throw createError({
+      statusCode: 504,
+      statusMessage: 'Directions API request timed out',
+      data: { error: true, message: 'เชื่อมต่อ Google Maps ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' }
+    })
+  }
 
   const route = data.routes[0]
   const leg = route?.legs[0]
