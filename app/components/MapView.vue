@@ -41,7 +41,8 @@ async function render() {
   map.fitBounds(bounds)
 }
 
-watch(() => props.polyline, render, { immediate: true })
+onMounted(render)
+watch(() => props.polyline, render)
 </script>
 
 <template>
